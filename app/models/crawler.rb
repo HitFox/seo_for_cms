@@ -1,10 +1,23 @@
 class Crawler
 
-  # def self.initialize
-  #   @keypage = 'https://www.valendo.de'
-  # end
+  def initialize(webpage)
+    @keypage = webpage
+    @all_header = []
+    @all_links_per_page = []
+    @p_class = []
+    @p = []
+    @canon_links = []
+    @url_list = []
+    @bad_urls = []
+  end
 
-  def self.check_length(var)
+  def crawl_webpage
+    get_url_list_of(@keypage)
+    fetcher_of(@keypage)
+    return_all
+  end
+
+  def check_length(var)
     temp = var.dup
     temp.each do |text|
       puts 0
@@ -17,37 +30,33 @@ class Crawler
     end
   end
 
-  def self.return_all
+  def return_all
     result = {}
     result[:doc] = @doc
     result[:all_header] = @all_header
-    result[:all_links] = @all_links.count
+    result[:all_links] = @all_links_per_page.count
     result[:p_class] = @p_class.last
     result[:p] = @p.last
     result[:canon_links] = @canon_links
     result[:meta_description] = @meta_description
     result[:title] = @title.text
+    result[:url_list] = @url_list
+    result[:bad_ulrs] = @bad_urls
 
     result
   end
 
-  def self.crawl_webpage(webpage)
+  def fetcher_of(webpage)
     # Fetch and parse HTML document
     doc = Nokogiri::HTML(open(webpage))
     @doc = doc
-
-    @all_header = []
-    @all_links = []
-    @p_class = []
-    @p = []
-    @canon_links = []
 
     doc.xpath('//h1[@class]').each do |header|
       @all_header << header.text
     end
 
     doc.xpath('//a[@class]').each do |link|
-      @all_links << link
+      @all_links_per_page << link
     end
 
     doc.xpath('//meta[@name="description"]').each do |description|
@@ -71,14 +80,10 @@ class Crawler
     doc.xpath('//link[@rel="canonical"]').each do |canon_links|
       @canon_links = canon_links
     end
-
-    return_all
   end
 
   #@counter = 0
-  @url_list = []
-  @bad_urls = []
-  def self.get_url_list_of(webpage)
+  def get_url_list_of(webpage)
     # fetch all URLs of the whole webpage
     #@counter += 1
     #puts webpage
@@ -116,6 +121,5 @@ class Crawler
     end
     #puts @url_list.length
     #self.get_url_list_of((@url_list[@counter-1]).to_s)
-    return @url_list, @bad_urls
   end
 end
