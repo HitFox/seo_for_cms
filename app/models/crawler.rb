@@ -1,19 +1,18 @@
 class Crawler
 
   def initialize(webpage)
-    @keypage = webpage
+    @key_url = webpage
     @all_header = []
     @all_links_per_page = []
     @p_class = []
     @p = []
     @canon_links = []
-    @url_list = []
-    @bad_urls = []
+    @url_hash = {}
   end
 
   def crawl_webpage
-    get_url_list_of(@keypage)
-    fetcher_of(@keypage)
+    search_url_hash(@key_url)
+    fetcher_of(@key_url)
     return_all
   end
 
@@ -40,15 +39,14 @@ class Crawler
     result[:canon_links] = @canon_links
     result[:meta_description] = @meta_description
     result[:title] = @title.text
-    result[:url_list] = @url_list
-    result[:bad_ulrs] = @bad_urls
+    result[:url_list] = @url_hash
 
     result
   end
 
-  def fetcher_of(webpage)
+  def fetcher_of(page_url)
     # Fetch and parse HTML document
-    doc = Nokogiri::HTML(open(webpage))
+    doc = Nokogiri::HTML(open(page_url))
     @doc = doc
 
     doc.xpath('//h1[@class]').each do |header|
@@ -82,44 +80,77 @@ class Crawler
     end
   end
 
-  #@counter = 0
-  def get_url_list_of(webpage)
-    # fetch all URLs of the whole webpage
-    #@counter += 1
-    #puts webpage
-    # if webpage.match(/mailto:/)
-    #   webpage = 'https://www.valendo.de/mail_info_placeholder_for_debugging'
-    # end
-    
-    # if webpage.match(/.css/)
-    #   webpage = 'https://www.valendo.de/css_placeholder_for_debugging'
-    # end
 
-    # unless webpage.match(/http/)
-    #   unless webpage.match(/^\//)
-    #     webpage = '/'+webpage
-    #   end
-    #   webpage = 'https://www.valendo.de'+webpage
-    # end
+  def valid_url?(url)
+    case url
+    when /http:\/\//
+      @url_hash[url] = 'invalid'
+      return false
+    when /mailto:/
+      @url_hash[url] = 'invalid'
+      return false
+    when /.css/
+      @url_hash[url] = 'invalid'
+      return false
+    when /^#/
+      @url_hash[url] = 'invalid'
+      return false
+    when /^\//
+      check_url(url)
+    when /\/$/
+      @url_hash[url] = 'invalid'
+      return false
+    when /www.savedo./
+      @url_hash[url] = 'valid'
+      return true
+    else
+      @url_hash[url] = 'invalid'
+      return false 
+    end
+  end
 
-    #puts webpage
+  def check_url(url)
+    unless url.match(/http/)
+      unless url.match(/^\//)
+        url = '/'+url
+      end
+      url = @key_url+url
+    end
+    valid_url?(url)
+  end
+
+  def search_url_hash(key_url)
+    @url_hash[key_url] = 'valid'
+    url_array = []
+    @url_hash.keys.each do |key|
+      url_array << key
+    end
+    url_array.each do |url|
+      if @url_hash[url] == 'valid'
+        get_url_list_of(url)
+      end
+      @url_hash.keys.each do |key|
+        url_array << key
+      end
+      url_array.uniq!
+    end
+  end
+
+  def get_url_list_of(page_url)
+    # fetch all URLs of keypage's domain
+    puts page_url
+    #puts @url_list.length
+
     begin
-      doc = Nokogiri::HTML(open(webpage))
+      doc = Nokogiri::HTML(open(page_url))
       doc.xpath('//@href').each do |url|
-        unless @url_list.include? url.to_s
-          @url_list << url.to_s
-        end
+        valid_url?(url.to_s)
       end
     rescue OpenURI::HTTPError => e
-      if e.message == '404 Not Found'
-        @bad_urls << 'not found 404 '+webpage
-      elsif e.message == '400 Not Found'
-        @bad_urls << 'not found 400 '+webpage
-      else
-        @bad_urls << 'unknown code '+webpage
+      if e.message
+        @url_list[page_url] = 'invalid'+e.message
       end
+      #break
     end
-    #puts @url_list.length
-    #self.get_url_list_of((@url_list[@counter-1]).to_s)
   end
 end
