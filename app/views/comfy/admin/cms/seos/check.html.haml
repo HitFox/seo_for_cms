@@ -6,6 +6,8 @@
 %p There is a paragraph (with class) that is more than 150 words long? #{@result[:p_class]}
 %p There is a paragraph with more than 150 words? #{@result[:p]}
 %p Are canonical links used? #{@result[:canon_links]}
-%p All URLs: #{@result[:url_list]}
+%p All valid URLs: #{@result[:valid_urls_array]}
+%p All invalid URLs: #{@result[:invalid_urls_array]}
+%p All invalid errored URLs: #{@result[:invalid_error_urls_array]}
 
 / %p all doc #{@result[:doc]}

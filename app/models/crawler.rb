@@ -34,9 +34,11 @@ class Crawler
       end
       url_array.uniq!
     end
+    divide_url_hash
   end
 
-    def get_url_list_of(page_url)
+  def get_url_list_of(page_url)
+      puts page_url
     begin
       doc = Nokogiri::HTML(open(page_url))
       doc.xpath('//@href').each do |url|
@@ -44,7 +46,7 @@ class Crawler
       end
     rescue OpenURI::HTTPError => e
       if e.message
-        @url_list[page_url] = 'invalid '+e.message
+        @url_hash[page_url] = 'invalid '+e.message
       end
     end
   end
@@ -85,6 +87,22 @@ class Crawler
       url = @key_url+url
     end
     valid_url?(url)
+  end
+
+  def divide_url_hash
+    @valid_urls_array =[]
+    @invalid_urls_array =[]
+    @invalid_error_urls_array =[]
+    @url_hash.each do |url, validator|
+      case validator
+      when 'valid'
+        @valid_urls_array << url 
+      when 'invalid'
+        @invalid_urls_array << url
+      else
+        @invalid_error_urls_array << url
+      end
+    end
   end
 
   def fetcher_of(page_url)
@@ -146,7 +164,10 @@ class Crawler
     result[:canon_links] = @canon_links
     result[:meta_description] = @meta_description
     result[:title] = @title.text
-    result[:url_list] = @url_hash
+    result[:valid_urls_array] = @valid_urls_array
+    result[:invalid_urls_array] = @invalid_urls_array
+    result[:invalid_error_urls_array] = @invalid_error_urls_array
+
     result
   end
 end
