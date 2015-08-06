@@ -1,4 +1,9 @@
 class Crawler
+
+  # def self.initialize
+  #   @keypage = 'https://www.valendo.de'
+  # end
+
   def self.check_length(var)
     temp = var.dup
     temp.each do |text|
@@ -68,5 +73,49 @@ class Crawler
     end
 
     return_all
+  end
+
+  #@counter = 0
+  @url_list = []
+  @bad_urls = []
+  def self.get_url_list_of(webpage)
+    # fetch all URLs of the whole webpage
+    #@counter += 1
+    #puts webpage
+    # if webpage.match(/mailto:/)
+    #   webpage = 'https://www.valendo.de/mail_info_placeholder_for_debugging'
+    # end
+    
+    # if webpage.match(/.css/)
+    #   webpage = 'https://www.valendo.de/css_placeholder_for_debugging'
+    # end
+
+    # unless webpage.match(/http/)
+    #   unless webpage.match(/^\//)
+    #     webpage = '/'+webpage
+    #   end
+    #   webpage = 'https://www.valendo.de'+webpage
+    # end
+
+    #puts webpage
+    begin
+      doc = Nokogiri::HTML(open(webpage))
+      doc.xpath('//@href').each do |url|
+        unless @url_list.include? url.to_s
+          @url_list << url.to_s
+        end
+      end
+    rescue OpenURI::HTTPError => e
+      if e.message == '404 Not Found'
+        @bad_urls << 'not found 404 '+webpage
+      elsif e.message == '400 Not Found'
+        @bad_urls << 'not found 400 '+webpage
+      else
+        @bad_urls << 'unknown code '+webpage
+      end
+    end
+    #puts @url_list.length
+    #self.get_url_list_of((@url_list[@counter-1]).to_s)
+    return @url_list, @bad_urls
   end
 end
