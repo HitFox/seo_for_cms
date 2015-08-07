@@ -28,6 +28,7 @@
 %h4 All untested URLs:
 %p=@result[:untested_urls_array]
 %h4 All error coded URLs:
-%p=@result[:error_urls_array]
+- @result[:error_urls_hash].each do |url, error|
+  %div #{url}: #{error}
 
 / %p all doc #{@result[:doc]}

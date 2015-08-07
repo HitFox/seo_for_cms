@@ -14,9 +14,9 @@ class Crawler
 
   def edit_key_url(key_url)
     # test for https://domain. and https://www.domain.
-    key_name = key_url.match(/www\.(\b\w+)[\.]/)[1]
-    @www_key_url = 'https://www.'+key_name.to_s
-    @non_www_key_url = 'https://'+key_name.to_s
+    key_url.match(/(https?:\/\/)(www\.|)(\b\S+)[\.]/)
+    @www_key_url = $1+'www.'+$3+'.'
+    @non_www_key_url = $1+$3+'.'
   end
 
   def search_url_hash(key_url)
@@ -56,7 +56,7 @@ class Crawler
 
   def valid_url?(url)
     case url
-    when /http:\/\//
+    when /.\s./
       @url_hash[url] = 'untested'
       return false
     when /mailto:/
@@ -69,7 +69,7 @@ class Crawler
       @url_hash[url] = 'untested'
       return false
     when /^\//
-      check_url(url)
+      add_domain_to_url(url)
     when /\/$/
       @url_hash[url] = 'untested'
       return false
@@ -85,13 +85,13 @@ class Crawler
     end
   end
 
-  def check_url(url)
-    unless url.match(/http/)
-      unless url.match(/^\//)
-        url = '/'+url
-      end
-      url = @key_url+url
-    end
+  def add_domain_to_url(url)
+    # unless url.match(/\/http/) || url.match(/\/https/)
+    #   # unless url.match(/^\//)
+    #   #   url = '/'+url
+    #   # end
+    # end
+    url = @key_url+url
     valid_url?(url)
   end
 
@@ -99,7 +99,7 @@ class Crawler
     @valid_urls_array =[]
     @untested_urls_array =[]
     @system_urls_array =[]
-    @error_urls_array =[]
+    @error_urls_hash = {}
     @url_hash.each do |url, validator|
       case validator
       when 'valid'
@@ -109,7 +109,7 @@ class Crawler
       when 'system'
         @system_urls_array << url
       else
-        @error_urls_array << url
+        @error_urls_hash[url] = validator
       end
     end
   end
@@ -171,9 +171,12 @@ class Crawler
     temp = attri.dup
     text_to_long = false
     temp.each do |text|
-      if text.split(' ').size > 150
-        attri << 'yes: ' + text
-        text_to_long = true
+      if text.encoding == 'UTF-8'
+        if text.split(' ').size > 150
+          attri << 'yes: ' + text
+          text_to_long = true
+        end
+      # do i need a warning here?
       end
     end
     attri << 'no' unless text_to_long
@@ -196,7 +199,7 @@ class Crawler
     result[:valid_urls_array] = @valid_urls_array
     result[:system_urls_array] = @system_urls_array
     result[:untested_urls_array] = @untested_urls_array
-    result[:error_urls_array] = @error_urls_array
+    result[:error_urls_hash] = @error_urls_hash
 
     result
   end
