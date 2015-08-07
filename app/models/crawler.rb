@@ -7,13 +7,16 @@ class Crawler
   end
 
   def crawl_webpage
-    internationalize_key_url(@key_url.dup)
+    edit_key_url(@key_url.dup)
     search_url_hash(@key_url)
     return_all
   end
 
-  def internationalize_key_url(key_url)
-    @internationalized_key_url = key_url.gsub(/\b\w+$/, '')
+  def edit_key_url(key_url)
+    # test for https://domain. and https://www.domain.
+    key_name = key_url.match(/www\.(\b\w+)[\.]/)[1]
+    @www_key_url = 'https://www.'+key_name.to_s
+    @non_www_key_url = 'https://'+key_name.to_s
   end
 
   def search_url_hash(key_url)
@@ -27,10 +30,10 @@ class Crawler
           fetcher_of(url)
         end
       end
-      # @url_hash.keys.each do |key|
-      #   url_array << key
-      # end
-      # url_array.uniq!
+      @url_hash.keys.each do |key|
+        url_array << key
+      end
+      url_array.uniq!
     end
     divide_url_hash
   end
@@ -67,12 +70,15 @@ class Crawler
       return false
     when /^\//
       check_url(url)
-    when /#{@internationalized_key_url}/
-      @url_hash[url] = 'valid'
-      return true
     when /\/$/
       @url_hash[url] = 'untested'
       return false
+    when /#{@www_key_url}/
+      @url_hash[url] = 'valid'
+      return true
+    when /#{@non_www_key_url}/
+      @url_hash[url] = 'valid'
+      return true
     else
       @url_hash[url] = 'untested'
       return false 
@@ -178,9 +184,7 @@ class Crawler
     imgages.each do |img|
       # put src and alt of imgage in a hash
       src = img.match(/src=.?("\S+)/) || 'no_src_found'
-      puts src
       alt = img.match(/alt=\W+((\w|\s)+)/) || 'no_alt_found'
-      puts alt
       image_tag_hash[src] = alt
     end
     image_tag_hash
