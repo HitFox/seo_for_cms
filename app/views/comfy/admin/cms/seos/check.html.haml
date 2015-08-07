@@ -11,15 +11,22 @@
   %strong
     %em #{url}:
   - attributes.each do |name, value|
-    %div #{name}: #{value}
+    %div
+      %u #{name}:
+      - if value.class.to_s == 'Hash'
+        - value.each do |src, alt|
+          #{src}: #{alt}
+          %br
+      - else
+        #{value}
   / - url.each do |test|
   /   %p=test
 /%p All valid URLs: #{@result[:valid_urls_array]}
 
 %h4 All system URLs:
 %p=@result[:system_urls_array]
-%h4 All invalid URLs:
-%p=@result[:invalid_urls_array]
+%h4 All untested URLs:
+%p=@result[:untested_urls_array]
 %h4 All error coded URLs:
 %p=@result[:error_urls_array]
 

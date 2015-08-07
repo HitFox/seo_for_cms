@@ -27,10 +27,10 @@ class Crawler
           fetcher_of(url)
         end
       end
-      @url_hash.keys.each do |key|
-        url_array << key
-      end
-      url_array.uniq!
+      # @url_hash.keys.each do |key|
+      #   url_array << key
+      # end
+      # url_array.uniq!
     end
     divide_url_hash
   end
@@ -44,7 +44,7 @@ class Crawler
       end
     rescue OpenURI::HTTPError => e
       if e.message
-        @url_hash[page_url] = 'invalid '+e.message
+        @url_hash[page_url] = e.message
         return false
       end
     end
@@ -54,7 +54,7 @@ class Crawler
   def valid_url?(url)
     case url
     when /http:\/\//
-      @url_hash[url] = 'invalid'
+      @url_hash[url] = 'untested'
       return false
     when /mailto:/
       @url_hash[url] = 'system'
@@ -63,18 +63,18 @@ class Crawler
       @url_hash[url] = 'system'
       return false
     when /^#/
-      @url_hash[url] = 'invalid'
+      @url_hash[url] = 'untested'
       return false
     when /^\//
       check_url(url)
-    when /\/$/
-      @url_hash[url] = 'invalid'
-      return false
     when /#{@internationalized_key_url}/
       @url_hash[url] = 'valid'
       return true
+    when /\/$/
+      @url_hash[url] = 'untested'
+      return false
     else
-      @url_hash[url] = 'invalid'
+      @url_hash[url] = 'untested'
       return false 
     end
   end
@@ -91,15 +91,15 @@ class Crawler
 
   def divide_url_hash
     @valid_urls_array =[]
-    @invalid_urls_array =[]
+    @untested_urls_array =[]
     @system_urls_array =[]
     @error_urls_array =[]
     @url_hash.each do |url, validator|
       case validator
       when 'valid'
         @valid_urls_array << url 
-      when 'invalid'
-        @invalid_urls_array << url
+      when 'untested'
+        @untested_urls_array << url
       when 'system'
         @system_urls_array << url
       else
@@ -113,9 +113,9 @@ class Crawler
     title = []
     meta_description = []
     all_links = []
-    p_class_tag = []
     p_tag = []
     canon_links = []
+    img_tags = []
     result_hash = {}
     # Fetch and parse HTML document
     doc = Nokogiri::HTML(open(page_url))
@@ -126,38 +126,38 @@ class Crawler
     end
 
     doc.xpath('//title').each do |t|
-      title = t.text
+      title << t.text
     end
 
     doc.xpath('//meta[@name="description"]').each do |description|
-      meta_description = description.to_s
+      meta_description << description.to_s
     end
 
     doc.xpath('//a[@href]').each do |link|
       all_links << link
     end
 
-    doc.xpath('//p[@class]').each do |p_class|
-      p_class_tag << p_class.text
-    end
-    check_length(p_class_tag)
-
     doc.xpath('//p').each do |p|
       p_tag << p.text
     end
     check_length(p_tag)
 
-    doc.xpath('//link[@rel="canonical"]').each do |canon_links|
-      @canon_links = canon_links
+    doc.xpath('//link[@rel="canonical"]').each do |can_links|
+      canon_links << can_links
+    end
+
+    doc.xpath('//img').each do |pic|
+      img_tags << pic.to_s
     end
 
     result_hash[:all_h1_header] = all_h1_header
     result_hash[:title] = title
     result_hash[:meta_description] = meta_description
     result_hash[:num_of_links] = all_links.count
-    result_hash[:p_class_tag] = p_class_tag
-    result_hash[:p_tag] = p_tag
+    result_hash[:p_tag_to_long] = p_tag.last
     result_hash[:canonical_links] = canon_links
+    result_hash[:image_with_alt] = check_alt_tag(img_tags)
+
     @attributes_hash[page_url] = result_hash
   end
 
@@ -173,12 +173,25 @@ class Crawler
     attri << 'no' unless text_to_long
   end
 
+  def check_alt_tag(imgages)
+    image_tag_hash = {}
+    imgages.each do |img|
+      # put src and alt of imgage in a hash
+      src = img.match(/src=.?("\S+)/) || 'no_src_found'
+      puts src
+      alt = img.match(/alt=\W+((\w|\s)+)/) || 'no_alt_found'
+      puts alt
+      image_tag_hash[src] = alt
+    end
+    image_tag_hash
+  end
+
   def return_all
     result = {}
     result[:attributes_hash] = @attributes_hash
     result[:valid_urls_array] = @valid_urls_array
     result[:system_urls_array] = @system_urls_array
-    result[:invalid_urls_array] = @invalid_urls_array
+    result[:untested_urls_array] = @untested_urls_array
     result[:error_urls_array] = @error_urls_array
 
     result
