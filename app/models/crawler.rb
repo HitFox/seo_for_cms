@@ -2,8 +2,13 @@ class Crawler
   # crawles the given webpage and it's children and fetches their attributes.
   def initialize(webpage)
     @key_url = webpage
+    @notes_hash = {}
     @url_hash = {}
     @attributes_hash = {}
+    @valid_urls_array =[]
+    @untested_urls_array =[]
+    @system_urls_array =[]
+    @error_urls_hash = {}
   end
 
   def crawl_webpage
@@ -20,20 +25,25 @@ class Crawler
   end
 
   def search_url_hash(key_url)
-    @url_hash[key_url] = 'valid'
     url_array = []
+    @notes_hash['too many urls on webpage?'] = 'no, crawled all'
+    @url_hash[key_url] = 'valid'
     url_array << key_url
     url_array.each do |url|
+      if url_array.size > 250
+        @notes_hash['too many urls on webpage?'] = 'yes, stopped exploring at 250'
+        break
+      end
       if @url_hash[url] == 'valid'
         # double check for valid, so no error if in rescue case
         if get_url_list_of(url)
           fetcher_of(url)
         end
+        @url_hash.keys.each do |key|
+          url_array << key
+        end
+        url_array.uniq!
       end
-      @url_hash.keys.each do |key|
-        url_array << key
-      end
-      url_array.uniq!
     end
     divide_url_hash
   end
@@ -68,7 +78,7 @@ class Crawler
     when /^#/
       @url_hash[url] = 'untested'
       return false
-    when /^\//
+    when /^(?!http:)/
       add_domain_to_url(url)
     # when /\/$/
     #   @url_hash[url] = 'untested'
@@ -87,19 +97,15 @@ class Crawler
 
   def add_domain_to_url(url)
     # unless url.match(/\/http/) || url.match(/\/https/)
-    #   # unless url.match(/^\//)
-    #   #   url = '/'+url
-    #   # end
+    unless url.match(/^\//)
+      url = '/'+url
+    end
     # end
     url = @key_url+url
     valid_url?(url)
   end
 
   def divide_url_hash
-    @valid_urls_array =[]
-    @untested_urls_array =[]
-    @system_urls_array =[]
-    @error_urls_hash = {}
     @url_hash.each do |url, validator|
       case validator
       when 'valid'
@@ -200,6 +206,7 @@ class Crawler
     result[:system_urls_array] = @system_urls_array
     result[:untested_urls_array] = @untested_urls_array
     result[:error_urls_hash] = @error_urls_hash
+    result[:system_notes] = @notes_hash
     result
   end
 end
