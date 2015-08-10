@@ -49,11 +49,13 @@ class Crawler
   end
 
   def get_url_list_of(page_url)
+    if Rails.env.development?
       puts page_url
+    end
     begin
       doc = Nokogiri::HTML(open(page_url, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE))
       doc.xpath('//@href').each do |url|
-        valid_url?(url.to_s)
+        attribute_to_url(url.to_s)
       end
     rescue OpenURI::HTTPError => e
       if e.message
@@ -64,45 +66,33 @@ class Crawler
     return true
   end
 
-  def valid_url?(url)
+  def attribute_to_url(url)
     case url
     when /.\s./
       @url_hash[url] = 'untested'
-      return false
     when /mailto:/
       @url_hash[url] = 'system'
-      return false
     when /.css/
       @url_hash[url] = 'system'
-      return false
     when /^#/
       @url_hash[url] = 'untested'
-      return false
     when /^(?!http:)/
       add_domain_to_url(url)
-    # when /\/$/
-    #   @url_hash[url] = 'untested'
-    #   return false
-    when /#{@www_key_url}/
+    when /^#{@www_key_url}/
       @url_hash[url] = 'valid'
-      return true
-    when /#{@non_www_key_url}/
+    when /^#{@non_www_key_url}/
       @url_hash[url] = 'valid'
-      return true
     else
       @url_hash[url] = 'untested'
-      return false 
     end
   end
 
   def add_domain_to_url(url)
-    # unless url.match(/\/http/) || url.match(/\/https/)
     unless url.match(/^\//)
       url = '/'+url
     end
-    # end
     url = @key_url+url
-    valid_url?(url)
+    attribute_to_url(url)
   end
 
   def divide_url_hash
