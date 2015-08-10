@@ -41,7 +41,7 @@ class Crawler
   def get_url_list_of(page_url)
       puts page_url
     begin
-      doc = Nokogiri::HTML(open(page_url))
+      doc = Nokogiri::HTML(open(page_url, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE))
       doc.xpath('//@href').each do |url|
         valid_url?(url.to_s)
       end
@@ -70,9 +70,9 @@ class Crawler
       return false
     when /^\//
       add_domain_to_url(url)
-    when /\/$/
-      @url_hash[url] = 'untested'
-      return false
+    # when /\/$/
+    #   @url_hash[url] = 'untested'
+    #   return false
     when /#{@www_key_url}/
       @url_hash[url] = 'valid'
       return true
@@ -124,10 +124,10 @@ class Crawler
     img_tags = []
     result_hash = {}
     # Fetch and parse HTML document
-    doc = Nokogiri::HTML(open(page_url))
+    doc = Nokogiri::HTML(open(page_url, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE))
     @doc = doc
 
-    doc.xpath('//h1[@class]').each do |header|
+    doc.xpath('//h1').each do |header|
       all_h1_header << header.text
     end
 
@@ -162,7 +162,7 @@ class Crawler
     result_hash[:num_of_links] = all_links.count
     result_hash[:p_tag_to_long] = p_tag.last
     result_hash[:canonical_links] = canon_links
-    result_hash[:image_with_alt] = check_alt_tag(img_tags)
+    result_hash[:image_and_alt] = check_alt_tag(img_tags)
 
     @attributes_hash[page_url] = result_hash
   end
@@ -200,7 +200,6 @@ class Crawler
     result[:system_urls_array] = @system_urls_array
     result[:untested_urls_array] = @untested_urls_array
     result[:error_urls_hash] = @error_urls_hash
-
     result
   end
 end
