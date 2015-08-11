@@ -152,6 +152,7 @@ GEM
     notiffany (0.0.6)
       nenv (~> 0.1)
       shellany (~> 0.0)
+    open_uri_redirections (0.2.1)
     paperclip (4.3.0)
       activemodel (>= 3.2.0)
       activesupport (>= 3.2.0)
@@ -271,6 +272,7 @@ DEPENDENCIES
   guard-rspec
   jbuilder (~> 2.0)
   jquery-rails
+  open_uri_redirections
   rails (= 4.2.3)
   rspec-rails (~> 3.0)
   sass-rails (~> 5.0)

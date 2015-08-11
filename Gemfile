@@ -1,5 +1,6 @@
 source 'https://rubygems.org'
 
+gem 'open_uri_redirections'
 gem 'comfortable_mexican_sofa', '~> 1.12.0'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.2.3'

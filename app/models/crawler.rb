@@ -30,10 +30,10 @@ class Crawler
     @url_hash[key_url] = 'valid'
     url_array << key_url
     url_array.each do |url|
-      if url_array.size > 250
-        @notes_hash['too many urls on webpage?'] = 'yes, stopped exploring at 250, please check!'
-        break
-      end
+      # if url_array.size > 400
+      #   @notes_hash['too many urls on webpage?'] = 'yes, stopped exploring at 400, please check!'
+      #   break
+      # end
       if @url_hash[url] == 'valid'
         # double check for valid, so no error if in rescue case
         if get_url_list_of(url)
@@ -53,7 +53,8 @@ class Crawler
       puts page_url
     end
     begin
-      @doc = Nokogiri::HTML(open(page_url, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE))
+      @doc = Nokogiri::HTML(open(page_url, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE, allow_redirections: :all))
+      @doc.xpath('//comment()').remove
       @doc.xpath('//@href').each do |url|
         attribute_to_url(url.to_s)
       end
@@ -67,23 +68,27 @@ class Crawler
   end
 
   def attribute_to_url(url)
-    case url
-    when /\s/
+    if !url.ascii_only?
       @url_hash[url] = 'untested'
-    when /mailto:/
-      @url_hash[url] = 'system'
-    when /.css/
-      @url_hash[url] = 'system'
-    when /^#/
-      @url_hash[url] = 'untested'
-    when /^(?!http)/
-      add_domain_to_url(url)
-    when /^#{@www_key_url}/
-      @url_hash[url] = 'valid'
-    when /^#{@non_www_key_url}/
-      @url_hash[url] = 'valid'
     else
-      @url_hash[url] = 'untested'
+      case url
+      when /\s/
+        @url_hash[url] = 'untested'
+      when /mailto:/
+        @url_hash[url] = 'system'
+      when /.css/
+        @url_hash[url] = 'system'
+      when /^#/
+        @url_hash[url] = 'untested'
+      when /^(?!http)/
+        add_domain_to_url(url)
+      when /^#{@www_key_url}/
+        @url_hash[url] = 'valid'
+      when /^#{@non_www_key_url}/
+        @url_hash[url] = 'valid'
+      else
+        @url_hash[url] = 'untested'
+      end
     end
   end
 
