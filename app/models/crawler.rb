@@ -9,6 +9,7 @@ class Crawler
     @untested_urls_array =[]
     @system_urls_array =[]
     @error_urls_hash = {}
+    @doc = ''
   end
 
   def crawl_webpage
@@ -18,7 +19,7 @@ class Crawler
   end
 
   def edit_key_url(key_url)
-    # test for https://domain. and https://www.domain.
+    # creates //domain. and //www.domain.
     key_url.match(/(https?:\/\/)(www\.|)(\b\S+)[\.]/)
     @www_key_url = $1+'www.'+$3+'.'
     @non_www_key_url = $1+$3+'.'
@@ -26,23 +27,22 @@ class Crawler
 
   def search_url_hash(key_url)
     url_array = []
-    @notes_hash['too many urls on webpage?'] = 'no, crawled all'
     @url_hash[key_url] = 'valid'
     url_array << key_url
     url_array.each do |url|
       if url_array.size > 250
-        @notes_hash['too many urls on webpage?'] = 'yes, stopped exploring at 250'
+        @notes_hash['too many urls on webpage?'] = 'yes, stopped exploring at 250, please check!'
         break
       end
       if @url_hash[url] == 'valid'
         # double check for valid, so no error if in rescue case
         if get_url_list_of(url)
           fetcher_of(url)
+          @url_hash.keys.each do |key|
+            url_array << key
+          end
+          url_array.uniq!
         end
-        @url_hash.keys.each do |key|
-          url_array << key
-        end
-        url_array.uniq!
       end
     end
     divide_url_hash
@@ -53,8 +53,8 @@ class Crawler
       puts page_url
     end
     begin
-      doc = Nokogiri::HTML(open(page_url, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE))
-      doc.xpath('//@href').each do |url|
+      @doc = Nokogiri::HTML(open(page_url, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE))
+      @doc.xpath('//@href').each do |url|
         attribute_to_url(url.to_s)
       end
     rescue OpenURI::HTTPError => e
@@ -68,7 +68,7 @@ class Crawler
 
   def attribute_to_url(url)
     case url
-    when /.\s./
+    when /\s/
       @url_hash[url] = 'untested'
     when /mailto:/
       @url_hash[url] = 'system'
@@ -76,7 +76,7 @@ class Crawler
       @url_hash[url] = 'system'
     when /^#/
       @url_hash[url] = 'untested'
-    when /^(?!http:)/
+    when /^(?!http)/
       add_domain_to_url(url)
     when /^#{@www_key_url}/
       @url_hash[url] = 'valid'
@@ -111,6 +111,7 @@ class Crawler
   end
 
   def fetcher_of(page_url)
+    # Fetch and parse HTML document
     all_h1_header = []
     title = []
     meta_description = []
@@ -119,36 +120,33 @@ class Crawler
     canon_links = []
     img_tags = []
     result_hash = {}
-    # Fetch and parse HTML document
-    doc = Nokogiri::HTML(open(page_url, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE))
-    @doc = doc
 
-    doc.xpath('//h1').each do |header|
+    @doc.xpath('//h1').each do |header|
       all_h1_header << header.text
     end
 
-    doc.xpath('//title').each do |t|
+    @doc.xpath('//title').each do |t|
       title << t.text
     end
 
-    doc.xpath('//meta[@name="description"]').each do |description|
+    @doc.xpath('//meta[@name="description"]').each do |description|
       meta_description << description.to_s
     end
 
-    doc.xpath('//a[@href]').each do |link|
+    @doc.xpath('//a[@href]').each do |link|
       all_links << link
     end
 
-    doc.xpath('//p').each do |p|
+    @doc.xpath('//p').each do |p|
       p_tag << p.text
     end
     check_length(p_tag)
 
-    doc.xpath('//link[@rel="canonical"]').each do |can_links|
+    @doc.xpath('//link[@rel="canonical"]').each do |can_links|
       canon_links << can_links
     end
 
-    doc.xpath('//img').each do |pic|
+    @doc.xpath('//img').each do |pic|
       img_tags << pic.to_s
     end
 
@@ -178,9 +176,9 @@ class Crawler
     attri << 'no' unless text_to_long
   end
 
-  def check_alt_tag(imgages)
+  def check_alt_tag(images)
     image_tag_hash = {}
-    imgages.each do |img|
+    images.each do |img|
       # put src and alt of imgage in a hash
       src = img.match(/src=.?("\S+)/) || 'no_src_found'
       alt = img.match(/alt=\W+((\w|\s)+)/) || 'no_alt_found'
