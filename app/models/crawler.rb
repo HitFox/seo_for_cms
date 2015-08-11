@@ -30,10 +30,10 @@ class Crawler
     @url_hash[key_url] = 'valid'
     url_array << key_url
     url_array.each do |url|
-      # if url_array.size > 400
-      #   @notes_hash['too many urls on webpage?'] = 'yes, stopped exploring at 400, please check!'
-      #   break
-      # end
+      if url_array.size > 500
+        @notes_hash['too many urls on webpage?'] = 'yes, stopped exploring at 500, please check!'
+        break
+      end
       if @url_hash[url] == 'valid'
         # double check for valid, so no error if in rescue case
         if get_url_list_of(url)
