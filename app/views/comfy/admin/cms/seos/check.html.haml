@@ -1,25 +1,49 @@
 %h1 Results
 %h4 All valid urls with attributes:
 - @result[:attributes_hash].each do |url, attributes|
-  %strong
-    %em #{url}:
-  - attributes.each do |name, value|
-    %div
-      %u #{name}:
-      - if value.class.to_s == 'Hash'
-        - value.each do |src, alt|
-          #{src}: #{alt}
-          %br
-      - else
-        #{value}
+  =link_to url, '', class: 'result_url'
+  .result_attributes
+    - attributes.each do |name, value|
+      =link_to name, '', class: 'result_url_name'
+      .result_url_value
+        - if value.class.to_s == 'Hash'
+          - value.each do |src, alt|
+            #{src}: #{alt}
+            %br
+        - else
+          #{value}
 %h4 All system URLs:
-%p=@result[:system_urls_array]
-%h4 All untested URLs:
-%p=@result[:untested_urls_array]
-%h4 All error coded URLs:
-- @result[:error_urls_hash].each do |url, error|
-  %div #{url}: #{error}
-%h4 Notes:
-- @result[:system_notes].each do |note, error|
-  %div #{note} #{error}
+- if @result[:system_urls_array].empty?
+  %div empty
+-else
+  .url_show show/hide
+  .url_show_content
+    - @result[:system_urls_array].each do |url|
+      %div=url
 
+%h4 All untested URLs:
+- if @result[:untested_urls_array].empty?
+  %div empty
+-else
+  .url_show show/hide
+  .url_show_content
+    - @result[:untested_urls_array].each do |url|
+      %div=url
+
+%h4 All error coded URLs:
+- if @result[:error_urls_hash].empty?
+  %div empty
+-else
+  .url_show show/hide
+  .url_show_content
+    - @result[:error_urls_hash].each do |url, error|
+      %div #{url}: #{error}
+
+%h4 Notes:
+- if @result[:system_notes].empty?
+  %div empty
+-else
+  .url_show show/hide
+  .url_show_content
+    - @result[:system_notes].each do |note, error|
+      %div #{url}: #{error}

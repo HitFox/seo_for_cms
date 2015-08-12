@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   get 'comfy/admin/cms/seos/index'
   get 'comfy/admin/cms/seos/check'
   get 'comfy/admin/cms/seos/wait'
+  get 'comfy/admin/cms/seos/details'
 
   # Make sure this routeset is defined last
   comfy_route :cms, :path => '/', :sitemap => false

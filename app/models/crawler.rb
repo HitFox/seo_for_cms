@@ -19,29 +19,33 @@ class Crawler
   end
 
   def edit_key_url(key_url)
-    # creates //domain. and //www.domain.
+    # creates domain. and www.domain.
     key_url.match(/(https?:\/\/)(www\.|)(\b\S+)[\.]/)
     @www_key_url = $1+'www.'+$3+'.'
     @non_www_key_url = $1+$3+'.'
   end
 
   def search_url_hash(key_url)
+    count = 0
     url_array = []
     @url_hash[key_url] = 'valid'
     url_array << key_url
     url_array.each do |url|
+      count +=1
       if url_array.size > 500
         @notes_hash['too many urls on webpage?'] = 'yes, stopped exploring at 500, please check!'
         break
       end
-      if @url_hash[url] == 'valid'
-        # double check for valid, so no error if in rescue case
-        if get_url_list_of(url)
-          fetcher_of(url)
-          @url_hash.keys.each do |key|
-            url_array << key
+      if count < 6
+        if @url_hash[url] == 'valid'
+          # double check for valid, so no error if in rescue case
+          if get_url_list_of(url)
+            fetcher_of(url)
+            @url_hash.keys.each do |key|
+              url_array << key
+            end
+            url_array.uniq!
           end
-          url_array.uniq!
         end
       end
     end
