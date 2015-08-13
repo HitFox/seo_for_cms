@@ -33,9 +33,8 @@ class Crawler
     url_array.each do |url|
       count +=1
       if @url_hash[url] == 'valid'
-        if count > 250
-          @notes_hash['too many urls on webpage?'] = 'yes, stopped exploring at 250, please check!'
-          break
+        if count > 300
+          @notes_hash['too many links on all webpage?'] = 'yes, more than 300, please check!'
         end
         if get_url_list_of(url)
         # double check for valid, so no error if in rescue case
@@ -74,11 +73,21 @@ class Crawler
       @url_hash[url] = 'untested'
     else
       case url
-      when /\s/
-        @url_hash[url] = 'untested'
       when /mailto:/
         @url_hash[url] = 'system'
-      when /.css/
+      when /\s/
+        @url_hash[url] = 'untested'
+      when /\.pdf$/
+        @url_hash[url] = 'system'
+      when /\.svg$/
+        @url_hash[url] = 'system'
+      when /\.ico$/
+        @url_hash[url] = 'system'
+      when /\.png$/
+        @url_hash[url] = 'system'
+      when /\.css$/
+        @url_hash[url] = 'system'
+      when /\.jpg$/
         @url_hash[url] = 'system'
       when /^#/
         @url_hash[url] = 'untested'
