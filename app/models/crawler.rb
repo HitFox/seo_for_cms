@@ -32,13 +32,13 @@ class Crawler
     url_array << key_url
     url_array.each do |url|
       count +=1
-      if url_array.size > 300
-        @notes_hash['too many urls on webpage?'] = 'yes, stopped exploring at 300, please check!'
-        break
-      end
       if @url_hash[url] == 'valid'
-        # double check for valid, so no error if in rescue case
+        if count > 250
+          @notes_hash['too many urls on webpage?'] = 'yes, stopped exploring at 250, please check!'
+          break
+        end
         if get_url_list_of(url)
+        # double check for valid, so no error if in rescue case
           fetcher_of(url)
           @url_hash.keys.each do |key|
             url_array << key

@@ -2,7 +2,7 @@
 %h4 All valid urls with attributes:
 - @result[:attributes_hash].each do |url, attributes|
   =link_to url, '', class: 'result_url'
-  .result_attributes
+  #result_attributes
     - attributes.each do |name, value|
       =link_to name, '', class: 'result_url_name'
       .result_url_value
@@ -14,7 +14,7 @@
           #{value}
 %h4 All system URLs:
 - if @result[:system_urls_array].empty?
-  %div empty
+  %div No data, sounds wrong!
 -else
   .url_show show/hide
   .url_show_content
@@ -23,7 +23,7 @@
 
 %h4 All untested URLs:
 - if @result[:untested_urls_array].empty?
-  %div empty
+  %div No data, really? Strange!
 -else
   .url_show show/hide
   .url_show_content
@@ -32,7 +32,7 @@
 
 %h4 All error coded URLs:
 - if @result[:error_urls_hash].empty?
-  %div empty
+  %div No data, well done!
 -else
   .url_show show/hide
   .url_show_content
@@ -41,7 +41,7 @@
 
 %h4 Notes:
 - if @result[:system_notes].empty?
-  %div empty
+  %div No data, well done!
 -else
   .url_show show/hide
   .url_show_content

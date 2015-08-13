@@ -11,9 +11,21 @@
   color: forestgreen;
 }
 
-.result_attributes,
 .result_url_value,
 .url_show_content {
   display: none;
   padding: 0 10px;
+  overflow: scroll;
+}
+
+#result_attributes {
+  display: none;
+}
+
+#result_attributes.result_attr_show_me {
+  display: block;
+}
+
+#result_attributes.result_attr_hide_me {
+  display: none;
 }
