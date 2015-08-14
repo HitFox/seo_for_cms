@@ -19,8 +19,7 @@
   .url_show show/hide
   .url_show_content
     - @result[:system_urls_array].each do |url|
-      %div=url
-
+      %div #{url.first} [parent-> #{url.last}]
 %h4 All untested URLs:
 - if @result[:untested_urls_array].empty?
   %div No data, really? Strange!
@@ -28,7 +27,7 @@
   .url_show show/hide
   .url_show_content
     - @result[:untested_urls_array].each do |url|
-      %div=url
+      %div #{url.first} [parent-> #{url.last}]
 
 %h4 All error coded URLs:
 - if @result[:error_urls_hash].empty?

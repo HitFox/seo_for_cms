@@ -28,11 +28,11 @@ class Crawler
   def search_url_hash(key_url)
     count = 0
     url_array = []
-    @url_hash[key_url] = 'valid'
+    @url_hash[key_url] = ['valid', key_url]
     url_array << key_url
     url_array.each do |url|
       count +=1
-      if @url_hash[url] == 'valid'
+      if @url_hash[url].first == 'valid'
         if count > 300
           @notes_hash['too many links on all webpage?'] = 'yes, more than 300, please check!'
         end
@@ -57,10 +57,11 @@ class Crawler
       @doc = Nokogiri::HTML(open(page_url, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE, allow_redirections: :all))
       @doc.xpath('//comment()').remove
       @doc.xpath('//@href').each do |url|
-        attribute_to_url(url.to_s)
+        attribute_to_url(url.to_s, page_url)
       end
     rescue OpenURI::HTTPError => e
       if e.message
+        puts 'found u here? '+page_url
         @url_hash[page_url] = e.message
         return false
       end
@@ -68,60 +69,67 @@ class Crawler
     return true
   end
 
-  def attribute_to_url(url)
+  def attribute_to_url(url, parent_url)
     if !url.ascii_only?
-      @url_hash[url] = 'untested'
+      @url_hash[url] = ['untested', parent_url]
     else
       case url
       when /mailto:/
-        @url_hash[url] = 'system'
+        @url_hash[url] = ['system', parent_url]
       when /\s/
-        @url_hash[url] = 'untested'
+        @url_hash[url] = ['untested', parent_url]
       when /\.pdf$/
-        @url_hash[url] = 'system'
+        @url_hash[url] = ['system', parent_url]
       when /\.svg$/
-        @url_hash[url] = 'system'
+        @url_hash[url] = ['system', parent_url]
       when /\.ico$/
-        @url_hash[url] = 'system'
+        @url_hash[url] = ['system', parent_url]
       when /\.png$/
-        @url_hash[url] = 'system'
+        @url_hash[url] = ['system', parent_url]
       when /\.css$/
-        @url_hash[url] = 'system'
+        @url_hash[url] = ['system', parent_url]
       when /\.jpg$/
-        @url_hash[url] = 'system'
+        @url_hash[url] = ['system', parent_url]
       when /^#/
-        @url_hash[url] = 'untested'
+        @url_hash[url] = ['untested', parent_url]
       when /^(?!http)/
-        add_domain_to_url(url)
+        add_domain_to_url(url, parent_url)
       when /^#{@www_key_url}/
-        @url_hash[url] = 'valid'
+        @url_hash[url] = ['valid', parent_url]
       when /^#{@non_www_key_url}/
-        @url_hash[url] = 'valid'
+        @url_hash[url] = ['valid', parent_url]
       else
-        @url_hash[url] = 'untested'
+        @url_hash[url] = ['untested', parent_url]
       end
     end
   end
 
-  def add_domain_to_url(url)
+  def add_domain_to_url(url, parent_url)
     unless url.match(/^\//)
       url = '/'+url
     end
     url = @key_url+url
-    attribute_to_url(url)
+    attribute_to_url(url, parent_url)
   end
 
   def divide_url_hash
     @url_hash.each do |url, validator|
-      case validator
-      when 'valid'
-        @valid_urls_array << url 
-      when 'untested'
-        @untested_urls_array << url
-      when 'system'
-        @system_urls_array << url
-      else
-        @error_urls_hash[url] = validator
+      puts '???????????????????'
+      puts url
+      puts validator
+      puts '???????????????????'
+      if url != @key_url
+        case validator.first
+        when 'valid'
+          @valid_urls_array << [url, validator.last] 
+        when 'untested'
+          @untested_urls_array << [url, validator.last]
+        when 'system'
+          @system_urls_array << [url, validator.last]
+        else
+          puts 'found u '+url
+          @error_urls_hash[url] = validator
+        end
       end
     end
   end
@@ -129,6 +137,11 @@ class Crawler
   def fetcher_of(page_url)
     # Fetch and parse HTML document
     all_h1_header = []
+    all_h2_header = []
+    all_h3_header = []
+    all_h4_header = []
+    all_h5_header = []
+    all_h6_header = []
     title = []
     meta_description = []
     all_links = []
@@ -139,6 +152,21 @@ class Crawler
 
     @doc.xpath('//h1').each do |header|
       all_h1_header << header.text
+    end
+    @doc.xpath('//h2').each do |header|
+      all_h2_header << header.text
+    end
+    @doc.xpath('//h3').each do |header|
+      all_h3_header << header.text
+    end
+    @doc.xpath('//h4').each do |header|
+      all_h4_header << header.text
+    end
+    @doc.xpath('//h5').each do |header|
+      all_h5_header << header.text
+    end
+    @doc.xpath('//h6').each do |header|
+      all_h6_header << header.text
     end
 
     @doc.xpath('//title').each do |t|
@@ -167,6 +195,11 @@ class Crawler
     end
 
     result_hash[:all_h1_header] = all_h1_header
+    result_hash[:all_h2_header] = all_h2_header
+    result_hash[:all_h3_header] = all_h3_header
+    result_hash[:all_h4_header] = all_h4_header
+    result_hash[:all_h5_header] = all_h5_header
+    result_hash[:all_h6_header] = all_h6_header
     result_hash[:title] = title
     result_hash[:meta_description] = meta_description
     result_hash[:num_of_links] = all_links.count
