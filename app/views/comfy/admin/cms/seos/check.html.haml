@@ -8,7 +8,11 @@
       .result_url_value
         - if value.class.to_s == 'Hash'
           - value.each do |src, alt|
-            #{src}: #{alt}
+            src= #{src} [alt= #{alt}]
+            %br
+        - elsif value.class.to_s == 'Array'
+          - value.each do |link|
+            #{link}
             %br
         - else
           #{value}
@@ -36,7 +40,7 @@
   .url_show show/hide
   .url_show_content
     - @result[:error_urls_hash].each do |url, error|
-      %div #{url}: #{error}
+      %div #{url}: #{error.first} [parent-> #{error.last}]
 
 %h4 Notes:
 - if @result[:system_notes].empty?

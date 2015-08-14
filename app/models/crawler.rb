@@ -62,7 +62,7 @@ class Crawler
     rescue OpenURI::HTTPError => e
       if e.message
         puts 'found u here? '+page_url
-        @url_hash[page_url] = e.message
+        @url_hash[page_url][0] = e.message
         return false
       end
     end
@@ -114,10 +114,6 @@ class Crawler
 
   def divide_url_hash
     @url_hash.each do |url, validator|
-      puts '???????????????????'
-      puts url
-      puts validator
-      puts '???????????????????'
       if url != @key_url
         case validator.first
         when 'valid'
@@ -201,13 +197,33 @@ class Crawler
     result_hash[:all_h5_header] = all_h5_header
     result_hash[:all_h6_header] = all_h6_header
     result_hash[:title] = title
-    result_hash[:meta_description] = meta_description
-    result_hash[:num_of_links] = all_links.count
+    result_hash[:meta_description] = find_description(meta_description)
+    result_hash[:all_links_on_page] = find_links(all_links)
     result_hash[:p_tag_to_long] = p_tag.last
     result_hash[:canonical_links] = canon_links
     result_hash[:image_and_alt] = check_alt_tag(img_tags)
 
     @attributes_hash[page_url] = result_hash
+  end
+
+  def find_description(meta_description_nokogiri)
+    desc = []
+    meta_description_nokogiri.each do |content|
+      puts content.to_s
+      puts '///////////////////////'
+      content.to_s.match(/content=.(.+)(" |' )/)
+      desc << ($1.nil? ? 'nothing found' : $1)
+    end
+    desc
+  end
+
+  def find_links(all_links_nokogiri)
+    just_links = []
+    all_links_nokogiri.each do |content|
+      content.to_s.match(/href=.((\/|\w|-|\/|\.|:\/\/|\+|:\w+@\w+\.)+)/)
+      just_links << ($1.nil? ? 'nothing found' : $1)
+    end
+    just_links
   end
 
   def check_length(attri)
@@ -229,8 +245,10 @@ class Crawler
     image_tag_hash = {}
     images.each do |img|
       # put src and alt of imgage in a hash
-      src = img.match(/src=.?("\S+)/) || 'no_src_found'
-      alt = img.match(/alt=\W+((\w|\s)+)/) || 'no_alt_found'
+      img.match(/src=.?("\S+)/)
+      src = ($1.nil? ? 'no_src_found' : $1)
+      img.match(/alt=\W+((\w|\s)+)/)
+      alt= ($1.nil? ? 'no_alt_found' : $1)
       image_tag_hash[src] = alt
     end
     image_tag_hash

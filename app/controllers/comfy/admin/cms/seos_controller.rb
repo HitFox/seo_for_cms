@@ -7,8 +7,11 @@ class Comfy::Admin::Cms::SeosController < Comfy::Admin::Cms::BaseController
   end
 
   def check
-    webpage = 'https://www.savedo.de'
+    webpage = 'http://www.ita-online.info'
     crawler = Crawler.new(webpage)
+    start = Time.now
     @result = crawler.crawl_webpage
+    after= Time.now
+    puts start.to_s+' till '+after.to_s
   end
 end
