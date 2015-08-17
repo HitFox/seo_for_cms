@@ -15,6 +15,8 @@ class Crawler
   def crawl_webpage
     edit_key_url(@key_url.dup)
     search_url_hash(@key_url)
+    seo_checker = SeoCheck.new(@attributes_hash, @key_url)
+    seo_checker.check_seo
     return_all
   end
 
@@ -54,14 +56,13 @@ class Crawler
       puts page_url
     end
     begin
-      @doc = Nokogiri::HTML(open(page_url, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE, allow_redirections: :all))
+      @doc = Nokogiri::HTML(open(page_url, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE, allow_redirections: :all),nil,'UTF-8')
       @doc.xpath('//comment()').remove
       @doc.xpath('//@href').each do |url|
         attribute_to_url(url.to_s, page_url)
       end
     rescue OpenURI::HTTPError => e
       if e.message
-        puts 'found u here? '+page_url
         @url_hash[page_url][0] = e.message
         return false
       end
@@ -123,7 +124,6 @@ class Crawler
         when 'system'
           @system_urls_array << [url, validator.last]
         else
-          puts 'found u '+url
           @error_urls_hash[url] = validator
         end
       end
@@ -209,9 +209,7 @@ class Crawler
   def find_description(meta_description_nokogiri)
     desc = []
     meta_description_nokogiri.each do |content|
-      puts content.to_s
-      puts '///////////////////////'
-      content.to_s.match(/content=.(.+)(" |' )/)
+      content.to_s.match(/content=.([^=]+)("|')/)
       desc << ($1.nil? ? 'nothing found' : $1)
     end
     desc
@@ -257,7 +255,6 @@ class Crawler
   def return_all
     result = {}
     result[:attributes_hash] = @attributes_hash
-    result[:valid_urls_array] = @valid_urls_array
     result[:system_urls_array] = @system_urls_array
     result[:untested_urls_array] = @untested_urls_array
     result[:error_urls_hash] = @error_urls_hash

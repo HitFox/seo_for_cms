@@ -1,3 +1,5 @@
+require 'seo_check'
+
 class Comfy::Admin::Cms::SeosController < Comfy::Admin::Cms::BaseController
   def index
   end
@@ -7,11 +9,8 @@ class Comfy::Admin::Cms::SeosController < Comfy::Admin::Cms::BaseController
   end
 
   def check
-    webpage = 'http://www.ita-online.info'
+    webpage = 'http://www.ita-online.info/'
     crawler = Crawler.new(webpage)
-    start = Time.now
     @result = crawler.crawl_webpage
-    after= Time.now
-    puts start.to_s+' till '+after.to_s
   end
 end

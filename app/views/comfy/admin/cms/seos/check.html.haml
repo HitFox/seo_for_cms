@@ -6,9 +6,13 @@
     - attributes.each do |name, value|
       =link_to name, '', class: 'result_url_name'
       .result_url_value
-        - if value.class.to_s == 'Hash'
+        - if name == :image_and_alt
           - value.each do |src, alt|
             src= #{src} [alt= #{alt}]
+            %br
+        - elsif value.class.to_s == 'Hash'
+          - value.each do |key, count|
+            #{key} [count: #{count}]
             %br
         - elsif value.class.to_s == 'Array'
           - value.each do |link|
