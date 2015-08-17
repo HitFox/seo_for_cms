@@ -4,8 +4,6 @@ $ ->
   $('.result_url').click (event) ->
     event.preventDefault()
     clone = $(this).next().clone()
-    put = $(this).next().hasClass('result_attr_show_me')
-    console.log(put)
     $(this).siblings().removeClass('result_attr_show_me')
     $(this).siblings().removeClass('result_attr_hide_me')
     if clone.hasClass('result_attr_show_me') then $(this).next().addClass('result_attr_hide_me') else $(this).next().addClass('result_attr_show_me');

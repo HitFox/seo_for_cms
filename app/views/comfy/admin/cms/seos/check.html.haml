@@ -21,36 +21,14 @@
         - else
           #{value}
 %h4 All system URLs:
-- if @result[:system_urls_array].empty?
-  %div No data, sounds wrong!
--else
-  .url_show show/hide
-  .url_show_content
-    - @result[:system_urls_array].each do |url|
-      %div #{url.first} [parent-> #{url.last}]
+=render partial: 'error_feedback_array', locals: {result: @result[:system_urls_array]}
+
 %h4 All untested URLs:
-- if @result[:untested_urls_array].empty?
-  %div No data, really? Strange!
--else
-  .url_show show/hide
-  .url_show_content
-    - @result[:untested_urls_array].each do |url|
-      %div #{url.first} [parent-> #{url.last}]
+=render partial: 'error_feedback_array', locals: {result: @result[:untested_urls_array]}
 
 %h4 All error coded URLs:
-- if @result[:error_urls_hash].empty?
-  %div No data, well done!
--else
-  .url_show show/hide
-  .url_show_content
-    - @result[:error_urls_hash].each do |url, error|
-      %div #{url}: #{error.first} [parent-> #{error.last}]
+=render partial: 'error_feedback_hash', locals: {result: @result[:error_urls_hash]}
 
 %h4 Notes:
-- if @result[:system_notes].empty?
-  %div No data, well done!
--else
-  .url_show show/hide
-  .url_show_content
-    - @result[:system_notes].each do |note, error|
-      %div #{note}: #{error}
+=render partial: 'error_feedback_hash', locals: {result: @result[:system_notes]}
+
